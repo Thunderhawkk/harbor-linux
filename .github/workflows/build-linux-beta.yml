@@ -25,8 +25,9 @@ on:
           - rpm
           - flatpak
           - appimage
-  schedule:
-    - cron: "23 */5 * * *"
+  # Schedule paused for now; dispatch "Build Harbor Linux Beta" manually from the Actions tab.
+  # schedule:
+  #   - cron: "23 */5 * * *"
 
 permissions:
   contents: write
