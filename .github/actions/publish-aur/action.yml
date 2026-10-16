@@ -62,14 +62,14 @@ runs:
         fi
         pkgrel="${PACKAGE_REVISION}"
         cat > "${tmpdir}/PKGBUILD" <<EOF
-        # Maintainer: Aditya Hebballe <adityahebballe@proton.me>
+        # Maintainer: Thunderhawkk <thunderhawkk@users.noreply.github.com>
         pkgname=${AUR_PACKAGE}
         _pkgname=harbor
         pkgver=${VERSION}
         pkgrel=${pkgrel}
         pkgdesc='${package_desc}'
         arch=('x86_64')
-        url='https://github.com/harborstremio/harbor'
+        url='https://github.com/Harborofficial/Harbor'
         license=('MIT')
         depends=('ffmpeg' 'gst-libav' 'gst-plugins-bad' 'gst-plugins-good' 'gtk3' 'libayatana-appindicator' 'mpv' 'systemd-libs' 'webkit2gtk-4.1' 'yt-dlp')
         makedepends=('libarchive')
@@ -90,7 +90,7 @@ runs:
         cd "${tmpdir}"
         git add PKGBUILD .SRCINFO
         if git diff --cached --quiet; then echo 'AUR already current.'; exit 0; fi
-        git config user.name 'Aditya Hebballe'
-        git config user.email 'adityahebballe@proton.me'
+        git config user.name 'Thunderhawkk'
+        git config user.email 'thunderhawkk@users.noreply.github.com'
         git commit -m "Update to ${VERSION}"
         git push

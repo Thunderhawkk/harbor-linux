@@ -7,8 +7,10 @@ on:
         description: Upstream Harbor tag to build, for example v0.9.12. Leave empty for latest release.
         required: false
         type: string
-  schedule:
-    - cron: "17 */6 * * *"
+  # The stable channel resolves the upstream "latest" release; Harborofficial/Harbor has
+  # no stable releases yet, so the schedule stays off until one exists. Dispatch manually.
+  # schedule:
+  #   - cron: "17 */6 * * *"
 
 permissions:
   # The shared workflow invokes reusable build workflows that declare optional
@@ -43,7 +45,7 @@ jobs:
           if [ -n "${INPUT_TAG}" ]; then
             tag="${INPUT_TAG}"
           else
-            tag="$(gh api repos/harborstremio/harbor/releases/latest --jq '.tag_name')"
+            tag="$(gh api repos/Harborofficial/Harbor/releases/latest --jq '.tag_name')"
           fi
           if [ -z "${tag}" ] || [ "${tag}" = "null" ]; then
             echo "Could not resolve upstream tag" >&2
@@ -51,8 +53,8 @@ jobs:
           fi
           source_ref="${tag}"
           version="${tag#v}"
-          tag_commit="$(gh api "repos/harborstremio/harbor/git/ref/tags/${tag}" --jq '.object.sha')"
-          compare_status="$(gh api "repos/harborstremio/harbor/compare/7eaf9d4...${tag_commit}" --jq '.status')"
+          tag_commit="$(gh api "repos/Harborofficial/Harbor/git/ref/tags/${tag}" --jq '.object.sha')"
+          compare_status="$(gh api "repos/Harborofficial/Harbor/compare/7eaf9d4...${tag_commit}" --jq '.status')"
           if echo "${compare_status}" | grep -Eq '^(identical|ahead)$'; then
             contains_linux_fix=true
           else

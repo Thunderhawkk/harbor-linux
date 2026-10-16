@@ -1,16 +1,16 @@
 # Harbor for Linux
 
-Official Linux builds of [Harbor](https://github.com/harborstremio/harbor), built from its upstream source tags by GitHub Actions.
+Linux builds of [Harbor](https://github.com/Harborofficial/Harbor), built from its upstream source by GitHub Actions.
 
 <p align="center">
-  <a href="https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132"><strong>Download beta</strong></a>
+  <a href="https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132"><strong>Download beta</strong></a>
   ·
-  <a href="https://github.com/harborstremio-linux/harbor-linux-builds/releases/latest"><strong>Download stable</strong></a>
+  <a href="https://github.com/Thunderhawkk/harbor-linux/releases/latest"><strong>Download stable</strong></a>
   ·
-  <a href="https://github.com/harborstremio/harbor"><strong>Harbor upstream</strong></a>
+  <a href="https://github.com/Harborofficial/Harbor"><strong>Harbor upstream</strong></a>
 </p>
 
-> **x86_64 only.** Choose the package that fits your distribution below. Every package download below follows the current [beta release](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132).
+> **x86_64 only.** Choose the package that fits your distribution below. Every package download below follows the current [beta release](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132).
 
 > **Beta is recommended.** Harbor development currently moves through the beta channel; stable releases are less frequent and can lag behind the current beta version.
 
@@ -18,56 +18,30 @@ Official Linux builds of [Harbor](https://github.com/harborstremio/harbor), buil
 
 ### <img src="https://cdn.simpleicons.org/archlinux/1793D1" width="20" height="20" align="absmiddle" alt="" /> Arch Linux
 
-Install the recommended beta package from the AUR. Updates arrive through your usual AUR helper.
-
-```bash
-paru -S harbor-stremio-beta-bin
-```
-
-Replace `paru` with `yay` if that is your helper.
+Not published to the AUR from this repository yet. Use one of the prebuilt packages below, or
+build [Harbor](https://github.com/Harborofficial/Harbor) from source.
 
 ---
 
 ### <img src="https://cdn.simpleicons.org/ubuntu/E95420" width="20" height="20" align="absmiddle" alt="" /> Ubuntu 24.04
 
-Install the beta package repository for automatic updates.
+Package repository hosting is not configured for this repository yet.
 
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/harborstremio/harbor-beta/setup.deb.sh' | sudo -E bash
-sudo apt install harbor-beta
-```
-
-[Download the latest .deb directly instead →](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132)
+[Download the latest .deb directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
 
 ---
 
 ### <img src="https://cdn.simpleicons.org/fedora/51A2DA" width="20" height="20" align="absmiddle" alt="" /> Fedora 44
 
-Install the beta package repository for automatic updates.
+Package repository hosting is not configured for this repository yet.
 
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/harborstremio/harbor-beta/setup.rpm.sh' | sudo -E bash
-sudo dnf install harbor-beta
-```
-
-> [!NOTE]
-> **Temporary Fedora 44 workaround:** If installation fails with `Curl error (77)`
-> referencing `/etc/pki/tls/certs/ca-bundle.crt`, update the Cloudsmith repository
-> configuration to use Fedora 44's current CA bundle, clear the cache, and retry:
->
-> ```bash
-> sudo sed -i 's|sslcacert=/etc/pki/tls/certs/ca-bundle.crt|sslcacert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem|' /etc/yum.repos.d/harborstremio-harbor-beta.repo
-> sudo dnf clean all
-> sudo dnf install harbor-beta
-> ```
-
-[Download the latest .rpm directly instead →](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132)
+[Download the latest .rpm directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
 
 ---
 
 ### <img src="https://cdn.simpleicons.org/nixos/5277C3" width="20" height="20" align="absmiddle" alt="" /> NixOS
 
-Install Harbor using the Nix flake at [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake).
+Install Harbor using the community Nix flake at [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake).
 
 Run directly without installing:
 
@@ -92,27 +66,19 @@ See [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake) for Home Man
 
 ### <img src="https://cdn.simpleicons.org/flatpak/4A90D9" width="20" height="20" align="absmiddle" alt="" /> Flatpak
 
-Install Harbor Beta from [<img src="https://flatpark.org/logo.svg" width="18" height="18" align="absmiddle" alt="" /> FlatPark](https://flatpark.org/) for automatic updates.
-
-```bash
-flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
-flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak --user install flatpark site.harbor.Harbor.Beta
-```
-
-FlatPark provides the current beta channel. Flathub support will follow when stable Harbor releases become the main focus again.
-
-Prefer not to add FlatPark? [Download the latest .flatpak bundle instead →](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132)
+[Download the latest .flatpak bundle →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
 
 ```bash
 flatpak install --user ./Harbor_*.flatpak
 ```
 
+The bundle installs the beta branch as `site.harbor.Harbor.Beta`.
+
 ---
 
 ### <img src="https://avatars.githubusercontent.com/u/16617932?s=200&amp;v=4" width="20" height="20" align="absmiddle" alt="" /> AppImage (experimental)
 
-[Download the latest .AppImage →](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132)
+[Download the latest .AppImage →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
 
 ```bash
 chmod +x Harbor_*.AppImage
@@ -125,7 +91,7 @@ A portable x86_64 build using Tauri's experimental AppImage bundler, pending [up
 
 ## Verify a download
 
-Each release includes a SHA-256 checksum file for the core package assets. [Get SHA256SUMS from the current beta →](https://github.com/harborstremio-linux/harbor-linux-builds/releases/tag/beta-v0.9.132)
+Each release includes a SHA-256 checksum file for the core package assets. [Get SHA256SUMS from the current beta →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
 
 ```bash
 sha256sum -c SHA256SUMS-*.txt
@@ -135,24 +101,22 @@ sha256sum -c SHA256SUMS-*.txt
 
 Stable packages follow upstream Harbor release tags. They are published less frequently and may be behind the recommended beta channel.
 
-- [Download the latest stable release](https://github.com/harborstremio-linux/harbor-linux-builds/releases/latest)
-- Arch Linux: [`harbor-stremio-bin`](https://aur.archlinux.org/packages/harbor-stremio-bin)
-- Nix: [`github:axioncs/harbor-flake#stable`](https://github.com/axioncs/harbor-flake#channels)
-
-```bash
-paru -S harbor-stremio-bin
-```
-
-The stable and beta AUR packages conflict: they install the same Harbor application, so install one channel at a time.
+The stable workflow is disabled until [Harborofficial/Harbor](https://github.com/Harborofficial/Harbor) publishes stable releases; until then it can be dispatched manually from the Actions tab.
 
 ## How it works
 
-Beta is the primary channel. Each beta release is built from an exact `beta-branch` commit and published once per Harbor version; later commits with the same version do not create another release. Stable releases follow upstream Harbor release tags and can be behind beta. Releases provide `.deb`, `.rpm`, Flatpak, and an experimental AppImage bundle. Flatpak and AppImage build separately, so either can fail without blocking the core packages or the AUR update.
+Beta is the primary channel. Each beta release is built from an exact `beta-branch` commit of [Harborofficial/Harbor](https://github.com/Harborofficial/Harbor) and published once per Harbor version; later commits with the same version do not create another release. Releases provide `.deb`, `.rpm`, a Flatpak bundle, and an experimental AppImage. Flatpak and AppImage build separately, so either can fail without blocking the core packages.
 
-These are official Harbor Linux builds. The workflow and exact upstream source ref for each build are visible in the [Actions tab](https://github.com/harborstremio-linux/harbor-linux-builds/actions).
+The workflow and the exact upstream source ref for each build are visible in the [Actions tab](https://github.com/Thunderhawkk/harbor-linux/actions).
+
+## Maintainer setup
+
+- **Beta builds** work with the repository token alone: dispatch *Build Harbor Linux Beta* or let the 5-hour schedule run. The workflow resolves the current `Harborofficial/Harbor@beta-branch` version and publishes `beta-v<version>`.
+- **Cloudsmith** (optional): set the `CLOUDSMITH_BETA_REPOSITORY` repository variable (for example `Thunderhawkk/harbor-beta`) and the `CLOUDSMITH_API_KEY` secret. The Cloudsmith job is skipped until the variable exists.
+- **AUR** (optional): set the `AUR_SSH_PRIVATE_KEY` secret and point `aur_package` in `build-linux-beta.yml` at your own AUR package. The AUR step never blocks native packages.
+- **Stable builds**: re-enable the schedule in `build-linux-release.yml` once upstream publishes stable releases.
+- The build runs `pnpm run setup` in the source checkout, which fetches the pinned Linux dependencies (yt-dlp, ffmpeg, fonts, extension layer). Those downloads must stay reachable from the upstream repository.
 
 ## Package repository hosting
 
-<a href="https://cloudsmith.com"><img alt="OSS hosting by Cloudsmith" src="https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&amp;style=flat-square" /></a>
-
-Package repository hosting is graciously provided by [Cloudsmith](https://cloudsmith.com).
+Package repository hosting for the `.deb` and `.rpm` channels is planned through [Cloudsmith](https://cloudsmith.com) once configured above.

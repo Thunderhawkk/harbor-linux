@@ -85,7 +85,7 @@ jobs:
       - name: Checkout Harbor source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: harborstremio/harbor
+          repository: Harborofficial/Harbor
           ref: ${{ inputs.source_ref }}
           path: harbor
           fetch-depth: 1
@@ -172,7 +172,7 @@ jobs:
           else
             release=latest
           fi
-          echo "upinfo=gh-releases-zsync|harborstremio-linux|harbor-linux-builds|${release}|Harbor_*_amd64.AppImage.zsync" >> "${GITHUB_OUTPUT}"
+          echo "upinfo=gh-releases-zsync|Thunderhawkk|harbor-linux|${release}|Harbor_*_amd64.AppImage.zsync" >> "${GITHUB_OUTPUT}"
 
       - name: Build AppImage
         working-directory: harbor

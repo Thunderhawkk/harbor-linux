@@ -100,7 +100,7 @@ jobs:
           INPUT_SOURCE_REF: ${{ inputs.source_ref }}
         run: |
           set -euo pipefail
-          source_ref="$(gh api "repos/harborstremio/harbor/commits/${INPUT_SOURCE_REF}" --jq '.sha')"
+          source_ref="$(gh api "repos/Harborofficial/Harbor/commits/${INPUT_SOURCE_REF}" --jq '.sha')"
           echo "source_ref=${source_ref}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout downstream Flatpak configuration
@@ -112,7 +112,7 @@ jobs:
       - name: Checkout Harbor
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: harborstremio/harbor
+          repository: Harborofficial/Harbor
           ref: ${{ steps.source.outputs.source_ref }}
           path: harbor
 

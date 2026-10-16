@@ -70,7 +70,7 @@ jobs:
             echo "Target ${TARGET} attaches assets to an existing release; ${TAG} does not exist." >&2
             exit 1
           fi
-          notes="$(printf "Official %s Linux build of Harbor.\n\nSource: https://github.com/harborstremio/harbor/tree/%s\n\nThese binaries are built by Harbor's official Linux packaging workflow." "${CHANNEL}" "${SOURCE_REF}")"
+          notes="$(printf "Official %s Linux build of Harbor.\n\nSource: https://github.com/Harborofficial/Harbor/tree/%s\n\nThese binaries are built by Harbor's official Linux packaging workflow." "${CHANNEL}" "${SOURCE_REF}")"
           if [ "${CHANNEL}" = beta ]; then
             gh release create "${TAG}" --repo "${REPOSITORY}" --title "Harbor Linux ${TAG}" --notes "${notes}" --prerelease
           else
@@ -327,7 +327,8 @@ jobs:
   cloudsmith:
     name: Publish beta Linux packages to Cloudsmith
     needs: [ensure-release, build, publish]
-    if: inputs.channel == 'beta' && (inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'deb' || inputs.target == 'rpm')
+    # Skipped until a Cloudsmith repository exists (set the CLOUDSMITH_BETA_REPOSITORY variable).
+    if: inputs.channel == 'beta' && (inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'deb' || inputs.target == 'rpm') && vars.CLOUDSMITH_BETA_REPOSITORY != ''
     runs-on: ubuntu-24.04
     environment: release
     permissions:
@@ -445,8 +446,8 @@ jobs:
           chmod +x flatpak/update-flatpak.sh
           git add flatpak
           if git diff --cached --quiet; then exit 0; fi
-          git config user.name "Aditya Hebballe"
-          git config user.email "45328110+AdityaHebballe@users.noreply.github.com"
+          git config user.name "Thunderhawkk"
+          git config user.email "thunderhawkk@users.noreply.github.com"
           git commit -m "build(flatpak): sync ${{ inputs.version }}"
           git pull --rebase origin main
           git push origin HEAD:main

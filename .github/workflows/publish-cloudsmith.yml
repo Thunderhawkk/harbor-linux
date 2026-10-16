@@ -21,7 +21,7 @@ on:
       cloudsmith_repository:
         description: Cloudsmith owner/repository slug.
         required: true
-        default: harborstremio/harbor-beta
+        default: Thunderhawkk/harbor-beta
         type: string
 
 permissions:
