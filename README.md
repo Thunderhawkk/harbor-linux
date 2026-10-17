@@ -99,9 +99,9 @@ sha256sum -c SHA256SUMS-*.txt
 
 ## Stable releases
 
-Stable packages follow upstream Harbor release tags. They are published less frequently and may be behind the recommended beta channel.
+Stable packages follow upstream Harbor release tags and publish as `Harbor` (`harbor` packages) for the stable channel.
 
-The stable workflow is disabled until [Harborofficial/Harbor](https://github.com/Harborofficial/Harbor) publishes stable releases; until then it can be dispatched manually from the Actions tab.
+Dispatch **Build Harbor Linux Release** from the [Actions tab](https://github.com/Thunderhawkk/harbor-linux/actions) — it resolves the upstream `latest` release tag by default, or accepts a specific tag. Its schedule is off by default.
 
 ## How it works
 

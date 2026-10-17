@@ -70,7 +70,7 @@ jobs:
             echo "Target ${TARGET} attaches assets to an existing release; ${TAG} does not exist." >&2
             exit 1
           fi
-          notes="$(printf "Official %s Linux build of Harbor.\n\nSource: https://github.com/Harborofficial/Harbor/tree/%s\n\nThese binaries are built by Harbor's official Linux packaging workflow." "${CHANNEL}" "${SOURCE_REF}")"
+          notes="$(printf "Harbor %s Linux build.\n\nSource: https://github.com/Harborofficial/Harbor/tree/%s\n\nBuilt by this repository's Linux packaging workflow." "${CHANNEL}" "${SOURCE_REF}")"
           if [ "${CHANNEL}" = beta ]; then
             gh release create "${TAG}" --repo "${REPOSITORY}" --title "Harbor Linux ${TAG}" --notes "${notes}" --prerelease
           else
@@ -325,10 +325,11 @@ jobs:
           repository: ${{ github.repository }}
 
   cloudsmith:
-    name: Publish beta Linux packages to Cloudsmith
+    name: Publish ${{ inputs.channel }} Linux packages to Cloudsmith
     needs: [ensure-release, build, publish]
-    # Skipped until a Cloudsmith repository exists (set the CLOUDSMITH_BETA_REPOSITORY variable).
-    if: inputs.channel == 'beta' && (inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'deb' || inputs.target == 'rpm') && vars.CLOUDSMITH_BETA_REPOSITORY != ''
+    # Each channel publishes to its own Cloudsmith repository. The job is skipped
+    # until that channel's CLOUDSMITH_<CHANNEL>_REPOSITORY variable exists.
+    if: (inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'deb' || inputs.target == 'rpm') && ((inputs.channel == 'beta' && vars.CLOUDSMITH_BETA_REPOSITORY != '') || (inputs.channel == 'stable' && vars.CLOUDSMITH_STABLE_REPOSITORY != ''))
     runs-on: ubuntu-24.04
     environment: release
     permissions:
@@ -376,7 +377,8 @@ jobs:
       - name: Publish verified Debian package
         if: inputs.target != 'rpm'
         env:
-          CLOUDSMITH_REPOSITORY: ${{ vars.CLOUDSMITH_BETA_REPOSITORY }}
+          CLOUDSMITH_REPOSITORY: ${{ (inputs.channel == 'beta' && vars.CLOUDSMITH_BETA_REPOSITORY) || vars.CLOUDSMITH_STABLE_REPOSITORY }}
+          CHANNEL: ${{ inputs.channel }}
           VERSION: ${{ inputs.version }}
           PACKAGE_REVISION: ${{ inputs.package_revision }}
         run: |
@@ -384,13 +386,14 @@ jobs:
           test -n "${CLOUDSMITH_REPOSITORY}"
           cloudsmith push deb "${CLOUDSMITH_REPOSITORY}/ubuntu/noble" \
             "dist/Harbor_${VERSION}-${PACKAGE_REVISION}_amd64.deb" \
-            --tags beta
+            --tags "${CHANNEL}"
 
       - name: Publish verified RPM package
         if: inputs.target != 'deb'
         env:
-          CLOUDSMITH_REPOSITORY: ${{ vars.CLOUDSMITH_BETA_REPOSITORY }}
-          RPM_DISTRIBUTION: ${{ vars.CLOUDSMITH_BETA_RPM_DISTRIBUTION || 'fedora/44' }}
+          CLOUDSMITH_REPOSITORY: ${{ (inputs.channel == 'beta' && vars.CLOUDSMITH_BETA_REPOSITORY) || vars.CLOUDSMITH_STABLE_REPOSITORY }}
+          RPM_DISTRIBUTION: ${{ (inputs.channel == 'beta' && vars.CLOUDSMITH_BETA_RPM_DISTRIBUTION) || (inputs.channel == 'stable' && vars.CLOUDSMITH_STABLE_RPM_DISTRIBUTION) || 'fedora/44' }}
+          CHANNEL: ${{ inputs.channel }}
           VERSION: ${{ inputs.version }}
           PACKAGE_REVISION: ${{ inputs.package_revision }}
         run: |
@@ -399,7 +402,7 @@ jobs:
           test -n "${RPM_DISTRIBUTION}"
           cloudsmith push rpm "${CLOUDSMITH_REPOSITORY}/${RPM_DISTRIBUTION}" \
             "dist/Harbor-${VERSION}-${PACKAGE_REVISION}.x86_64.rpm" \
-            --tags beta
+            --tags "${CHANNEL}"
 
   flatpak:
     name: Build Flatpak bundle

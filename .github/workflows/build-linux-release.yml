@@ -53,7 +53,9 @@ jobs:
           fi
           source_ref="${tag}"
           version="${tag#v}"
-          tag_commit="$(gh api "repos/Harborofficial/Harbor/git/ref/tags/${tag}" --jq '.object.sha')"
+          # The commits endpoint resolves annotated tags to their commit; the git/ref
+          # endpoint would hand back the tag object for annotated tags.
+          tag_commit="$(gh api "repos/Harborofficial/Harbor/commits/${tag}" --jq '.sha')"
           compare_status="$(gh api "repos/Harborofficial/Harbor/compare/7eaf9d4...${tag_commit}" --jq '.status')"
           if echo "${compare_status}" | grep -Eq '^(identical|ahead)$'; then
             contains_linux_fix=true
