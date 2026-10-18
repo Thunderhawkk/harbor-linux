@@ -76,7 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           pacman -Syu --noconfirm --needed \
-            alsa-lib base-devel ca-certificates curl ffmpeg git gstreamer \
+            alsa-lib base-devel ca-certificates cmake curl ffmpeg git gstreamer \
             gst-libav gst-plugins-bad gst-plugins-base gst-plugins-good \
             gtk3 libayatana-appindicator librsvg mpv nodejs npm openssl \
             jq patchelf pkgconf rust webkit2gtk-4.1 yt-dlp zsync
