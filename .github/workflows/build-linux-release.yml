@@ -7,10 +7,8 @@ on:
         description: Upstream Harbor tag to build, for example v0.9.12. Leave empty for latest release.
         required: false
         type: string
-  # The stable channel resolves the upstream "latest" release; Harborofficial/Harbor has
-  # no stable releases yet, so the schedule stays off until one exists. Dispatch manually.
-  # schedule:
-  #   - cron: "17 */6 * * *"
+  schedule:
+    - cron: "17 */6 * * *"
 
 permissions:
   # The shared workflow invokes reusable build workflows that declare optional
