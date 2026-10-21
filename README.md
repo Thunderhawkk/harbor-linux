@@ -3,14 +3,14 @@
 Linux builds of [Harbor](https://github.com/Harborofficial/Harbor), built from its upstream source by GitHub Actions.
 
 <p align="center">
-  <a href="https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132"><strong>Download beta</strong></a>
+  <a href="https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1"><strong>Download beta</strong></a>
   ·
   <a href="https://github.com/Thunderhawkk/harbor-linux/releases/latest"><strong>Download stable</strong></a>
   ·
   <a href="https://github.com/Harborofficial/Harbor"><strong>Harbor upstream</strong></a>
 </p>
 
-> **x86_64 only.** Choose the package that fits your distribution below. Every package download below follows the current [beta release](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132).
+> **x86_64 only.** Choose the package that fits your distribution below. Every package download below follows the current [beta release](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1).
 
 > **Beta is recommended.** Harbor development currently moves through the beta channel; stable releases are less frequent and can lag behind the current beta version.
 
@@ -32,7 +32,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/harbor_official/harbor-beta/setup.de
 sudo apt install harbor-beta
 ```
 
-[Download the latest .deb directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
+[Download the latest .deb directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1)
 
 ---
 
@@ -45,7 +45,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/harbor_official/harbor-beta/setup.rp
 sudo dnf install harbor-beta
 ```
 
-[Download the latest .rpm directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
+[Download the latest .rpm directly instead →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1)
 
 ---
 
@@ -76,7 +76,7 @@ See [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake) for Home Man
 
 ### <img src="https://cdn.simpleicons.org/flatpak/4A90D9" width="20" height="20" align="absmiddle" alt="" /> Flatpak
 
-[Download the latest .flatpak bundle →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
+[Download the latest .flatpak bundle →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1)
 
 ```bash
 flatpak install --user ./Harbor_*.flatpak
@@ -88,7 +88,7 @@ The bundle installs the beta branch as `site.harbor.Harbor.Beta`.
 
 ### <img src="https://avatars.githubusercontent.com/u/16617932?s=200&amp;v=4" width="20" height="20" align="absmiddle" alt="" /> AppImage (experimental)
 
-[Download the latest .AppImage →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
+[Download the latest .AppImage →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1)
 
 ```bash
 chmod +x Harbor_*.AppImage
@@ -101,7 +101,7 @@ A portable x86_64 build using Tauri's experimental AppImage bundler, pending [up
 
 ## Verify a download
 
-Each release includes a SHA-256 checksum file for the core package assets. [Get SHA256SUMS from the current beta →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v0.9.132)
+Each release includes a SHA-256 checksum file for the core package assets. [Get SHA256SUMS from the current beta →](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.1)
 
 ```bash
 sha256sum -c SHA256SUMS-*.txt
