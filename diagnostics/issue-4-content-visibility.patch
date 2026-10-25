@@ -1,0 +1,57 @@
+--- a/src/views/detail/series-episode-row.tsx
++++ b/src/views/detail/series-episode-row.tsx
+@@ -86,7 +86,7 @@
+     <div
+       data-ep={ep.episodeNumber}
+       data-no-card-ring
+-      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 160px" }}
++      style={{ contentVisibility: "visible", containIntrinsicSize: "auto 160px" }}
+       onContextMenu={(e) => onContextMenu?.(e, ep.seasonNumber, ep.episodeNumber, progress.watched)}
+       onMouseEnter={() => prefetchSegments(meta, playEpisode)}
+       className="group flex gap-6 rounded-lg px-4 py-5 transition-colors hover:bg-elevated/30"
+--- a/src/views/detail/anime-episodes/episode-row.tsx
++++ b/src/views/detail/anime-episodes/episode-row.tsx
+@@ -72,7 +72,7 @@
+       data-ep={ep.number}
+       data-epid={ep.id}
+       data-no-card-ring
+-      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 160px" }}
++      style={{ contentVisibility: "visible", containIntrinsicSize: "auto 160px" }}
+       onContextMenu={(e) =>
+         onContextMenu?.(
+           e,
+--- a/src/components/lazy-mount.tsx
++++ b/src/components/lazy-mount.tsx
+@@ -53,11 +53,13 @@
+   fallback,
+   rootMargin = "2000px 0px",
+   minHeight = 240,
++  disableContentVisibility = false,
+ }: {
+   children: ReactNode;
+   fallback?: ReactNode;
+   rootMargin?: string;
+   minHeight?: number;
++  disableContentVisibility?: boolean;
+ }) {
+   const ref = useRef<HTMLDivElement>(null);
+   const [shown, setShown] = useState(false);
+@@ -116,6 +118,7 @@
+       style={
+         {
+           ...CULL_STYLE,
++          ...(disableContentVisibility ? { contentVisibility: "visible" } : {}),
+           "--harbor-cull-min": `${minHeight}px`,
+           ...(shown ? null : { minHeight: minHeight + CULL_PAD_Y * 2 }),
+         } as CSSProperties
+--- a/src/views/detail/content-rails.tsx
++++ b/src/views/detail/content-rails.tsx
+@@ -52,7 +52,7 @@
+                 </div>
+               </div>
+             </div>
+-            {!hidden && <LazyMount minHeight={s.minHeight ?? 280}>{s.node}</LazyMount>}
++            {!hidden && <LazyMount minHeight={s.minHeight ?? 280} disableContentVisibility>{s.node}</LazyMount>}
+           </div>
+         );
+       })}

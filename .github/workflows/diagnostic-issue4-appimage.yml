@@ -1,0 +1,206 @@
+name: Issue 4 WebKit Content Visibility Diagnostic
+
+on:
+  workflow_dispatch:
+
+# Build only the diagnostic AppImage using the existing 1.0.1 release
+# as baseline. No tags, new releases or original release assets replaced.
+
+permissions:
+  contents: write
+
+concurrency:
+  group: harbor-issue4-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Issue 4 diagnostic AppImage on Arch
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    timeout-minutes: 150
+    outputs:
+      source_ref: ${{ steps.package.outputs.source_ref }}
+      version: ${{ steps.package.outputs.version }}
+    steps:
+      - name: Checkout packaging workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Arch build dependencies
+        run: |
+          set -euo pipefail
+          printf 'Server = https://archive.archlinux.org/repos/2026/10/21/$repo/os/$arch\n' > /etc/pacman.d/mirrorlist
+          pacman -Syyuu --noconfirm --needed \
+            alsa-lib base-devel ca-certificates cmake curl ffmpeg git gstreamer \
+            gst-libav gst-plugins-bad gst-plugins-base gst-plugins-good \
+            gtk3 libayatana-appindicator librsvg mpv nodejs npm openssl \
+            jq patchelf pkgconf rust webkit2gtk-4.1 yt-dlp zsync github-cli
+          webkit_version="$(pacman -Q webkit2gtk-4.1 | awk '{print $2}')"
+          test "${webkit_version}" = '2.54.1-1' || { echo "::error::WebKitGTK version mismatch: ${webkit_version}"; exit 1; }
+          mkdir -p "${GITHUB_WORKSPACE}/diagnostics/build-metadata"
+          pacman -Q > "${GITHUB_WORKSPACE}/diagnostics/build-metadata/arch-packages.txt"
+          npm install --global pnpm@11.9.0
+
+      - name: Checkout Harbor source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Harborofficial/Harbor
+          ref: d862943d27ca10beca26d0d53e7bf6be66688968
+          path: harbor
+          fetch-depth: 1
+
+      - name: Resolve source and package version
+        id: package
+        working-directory: harbor
+        env:
+          INPUT_VERSION: "1.0.1"
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION}"
+          if [ -z "${version}" ]; then
+            version="$(node -p "require('./package.json').version")"
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "source_ref=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      - name: Validate and apply issue 4 patch
+        working-directory: harbor
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "d862943d27ca10beca26d0d53e7bf6be66688968"
+          patch="${GITHUB_WORKSPACE}/diagnostics/issue-4-content-visibility.patch"
+          echo "75ed7cc823eac0fd14107209e1dae9cb9bf94565dc6943146e52594e528ae724  ${patch}" | sha256sum -c -
+          git apply --check "${patch}"
+          git apply "${patch}"
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' \
+            src/components/lazy-mount.tsx \
+            src/views/detail/anime-episodes/episode-row.tsx \
+            src/views/detail/content-rails.tsx \
+            src/views/detail/series-episode-row.tsx | sort)"
+          test "${changed}" = "${expected}"
+
+      - name: Prepare Harbor workspace
+        working-directory: harbor
+        run: |
+          set -euo pipefail
+          node <<'EOF'
+          const fs = require('fs');
+          const workspacePath = 'pnpm-workspace.yaml';
+          let workspace = fs.readFileSync(workspacePath, 'utf8');
+          const setAllowBuild = (name, value) => {
+            const entry = new RegExp(`^(\\s*)${name}:.*$`, 'm');
+            if (entry.test(workspace)) {
+              workspace = workspace.replace(entry, `$1${name}: ${value}`);
+              return;
+            }
+            if (/^allowBuilds:\s*$/m.test(workspace)) {
+              workspace = workspace.replace(/^allowBuilds:\s*$/m, `allowBuilds:\n  ${name}: ${value}`);
+              return;
+            }
+            workspace += `${workspace.endsWith('\n') || !workspace ? '' : '\n'}allowBuilds:\n  ${name}: ${value}\n`;
+          };
+          setAllowBuild('esbuild', 'true');
+          setAllowBuild('protobufjs', 'false');
+          fs.writeFileSync(workspacePath, workspace);
+          EOF
+          pnpm install --lockfile-only --no-frozen-lockfile
+          pnpm install --frozen-lockfile
+          if node -e "process.exit(require('./package.json').scripts?.setup ? 0 : 1)"; then
+            pnpm run setup
+          else
+            if node -e "process.exit(require('./package.json').scripts?.['setup:fonts'] ? 0 : 1)"; then pnpm run setup:fonts; fi
+            mkdir -p src-tauri/binaries
+            ln -sf /usr/bin/ffmpeg src-tauri/binaries/ffmpeg-x86_64-unknown-linux-gnu
+            ln -sf /usr/bin/ffprobe src-tauri/binaries/ffprobe-x86_64-unknown-linux-gnu
+            ln -sf /usr/bin/yt-dlp src-tauri/binaries/yt-dlp-x86_64-unknown-linux-gnu
+          fi
+
+      - name: Install experimental Tauri bundler
+        run: |
+          set -euo pipefail
+          cargo install tauri-cli \
+            --git https://github.com/tauri-apps/tauri \
+            --rev 162626969b382d52faebdf6c7264460bd9a47d1f \
+            --locked \
+            --root "${RUNNER_TEMP}/tauri-cli"
+          echo "${RUNNER_TEMP}/tauri-cli/bin" >> "${GITHUB_PATH}"
+
+      - name: Configure experimental AppImage
+        id: appimage
+        working-directory: harbor
+        env:
+          CHANNEL: beta
+        run: |
+          set -euo pipefail
+          node <<'EOF'
+          const fs = require('fs');
+          const path = 'src-tauri/tauri.conf.json';
+          const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+          if (config.bundle?.linux?.appimage?.bundleMediaFramework !== true) {
+            throw new Error('The selected Harbor source does not enable AppImage media-framework bundling.');
+          }
+          config.bundle.createUpdaterArtifacts = false;
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          EOF
+          if [ "${CHANNEL}" = beta ]; then
+            release=latest-pre
+          else
+            release=latest
+          fi
+          echo "upinfo=gh-releases-zsync|Thunderhawkk|harbor-linux|${release}|Harbor_*_amd64.AppImage.zsync" >> "${GITHUB_OUTPUT}"
+
+      - name: Build AppImage
+        working-directory: harbor
+        env:
+          TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
+        run: timeout --signal=TERM 90m cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage
+
+      - name: Collect diagnostic AppImage and provenance
+        env:
+          SOURCE_REF: ${{ steps.package.outputs.source_ref }}
+        run: |
+          set -euo pipefail
+          appimage="$(find harbor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+          test -n "${appimage}"
+          mkdir -p dist
+          name="Harbor_1.0.1_Issue4_ContentVisibility_Diagnostic_amd64.AppImage"
+          install -m 755 "${appimage}" "dist/${name}"
+          cp diagnostics/build-metadata/arch-packages.txt dist/issue4-diagnostic-arch-packages.txt
+          sha256sum "dist/${name}" > dist/SHA256SUMS-issue4-diagnostic.txt
+          jq -n \
+            --arg source_commit "${SOURCE_REF}" \
+            --arg patch_sha256 "75ed7cc823eac0fd14107209e1dae9cb9bf94565dc6943146e52594e528ae724" \
+            --arg webkit_package "$(pacman -Q webkit2gtk-4.1)" \
+            --arg arch_snapshot "2026-10-21" \
+            --arg workflow_commit "${GITHUB_SHA}" \
+            --arg appimage "${name}" \
+            '{purpose: "issue-4-content-visibility-diagnostic",source_commit:$source_commit,patch_sha256:$patch_sha256,webkit_package:$webkit_package,arch_snapshot:$arch_snapshot,workflow_commit:$workflow_commit,appimage:$appimage,baseline:"Existing beta-v1.0.1 AppImage; no rebuild"}' \
+            > dist/issue4-diagnostic-build-manifest.json
+
+      - name: Upload diagnostic workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0 # v7.0.1
+        with:
+          name: issue4-content-visibility-1.0.1-diagnostic
+          path: dist/
+          if-no-files-found: error
+
+      - name: Upload diagnostic to existing 1.0.1 beta release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="beta-v1.0.1"
+          gh release view "${tag}" --repo "${REPOSITORY}" >/dev/null
+          assets="$(gh release view "${tag}" --repo "${REPOSITORY}" --json assets --jq '.assets[].name')"
+          for file in dist/*; do
+            name="$(basename "${file}")"
+            if grep -Fxq "${name}" <<< "${assets}"; then
+              echo "::error::Refusing to overwrite existing release asset: ${name}" >&2
+              exit 1
+            fi
+          done
+          gh release upload "${tag}" dist/* --repo "${REPOSITORY}"
+          echo "Uploaded only diagnostic assets to existing ${tag}."
