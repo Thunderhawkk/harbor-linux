@@ -126,13 +126,20 @@ jobs:
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           EOF
 
+      # Build native DEB/RPM packages together so Tauri stages the app resources
+      # only once. Two consecutive builds can conflict over shared output paths.
+      - name: Build Debian and RPM bundles
+        if: inputs.target == 'all' || inputs.target == 'native'
+        working-directory: harbor
+        run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles deb,rpm
+
       - name: Build Debian bundle
-        if: inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'deb'
+        if: inputs.target == 'deb'
         working-directory: harbor
         run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles deb
 
       - name: Build RPM bundle
-        if: inputs.target == 'all' || inputs.target == 'native' || inputs.target == 'rpm'
+        if: inputs.target == 'rpm'
         working-directory: harbor
         run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles rpm
 
