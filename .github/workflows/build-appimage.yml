@@ -104,10 +104,25 @@ jobs:
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "source_ref=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
 
+      # Cache only downloaded Capstan dependencies, not generated runtime/build
+      # outputs. An exact key prevents mixing JAR sets across pinned versions.
+      - name: Cache Capstan dependency JARs
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            harbor/android-extension-compat/libs
+            harbor/android-extension-compat/tools/*.jar
+            harbor/android-extension-compat/tools/dex-tools/lib
+          key: capstan-deps-arch-${{ hashFiles('harbor/android-extension-compat/tools/deps.sh') }}
+
       - name: Prepare Harbor workspace
         working-directory: harbor
         run: |
           set -euo pipefail
+          # repo1.maven.org returned HTTP 429 to GitHub's Arch runner. Prefer
+          # Maven Central's canonical host for fresh (uncached) dependency fetches.
+          # This modifies only the temporary Harbor checkout, not its repository.
+          sed -i 's#^M=https://repo1.maven.org/maven2$#M=https://repo.maven.apache.org/maven2#' android-extension-compat/tools/deps.sh
           node <<'EOF'
           const fs = require('fs');
           const workspacePath = 'pnpm-workspace.yaml';
