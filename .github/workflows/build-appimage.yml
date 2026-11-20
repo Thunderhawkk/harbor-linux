@@ -79,7 +79,8 @@ jobs:
             alsa-lib base-devel ca-certificates cmake curl ffmpeg git gstreamer \
             gst-libav gst-plugins-bad gst-plugins-base gst-plugins-good \
             gtk3 libayatana-appindicator librsvg mpv nodejs npm openssl \
-            jq patchelf pkgconf rust webkit2gtk-4.1 yt-dlp zsync
+            jq patchelf pkgconf rust strace webkit2gtk-4.1 xorg-server-xvfb \
+            xorg-xauth yt-dlp zsync
           npm install --global pnpm@11.9.0
 
       - name: Checkout Harbor source
@@ -165,6 +166,25 @@ jobs:
             --root "${RUNNER_TEMP}/tauri-cli"
           echo "${RUNNER_TEMP}/tauri-cli/bin" >> "${GITHUB_PATH}"
 
+      # This Tauri revision otherwise fetches quick-sharun from an unpinned main
+      # branch. Pin the last known-good version used by other Tauri AppImage builds.
+      # A wrapper retains its output because this bundler swallows child stderr.
+      - name: Pin AppImage bundler script and capture diagnostics
+        run: |
+          set -euo pipefail
+          cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tauri"
+          mkdir -p "$cache_dir"
+          script="$cache_dir/quick-sharun-pinned.sh"
+          curl -fsSL --retry 3 -o "$script" \
+            https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/b3a9e985cdedf7efa81d172f182cd13983743147/useful-tools/quick-sharun.sh
+          echo "4b765d0b38621852f5fc6cb460641fcce6103b548582d58942abc65ab7dbd93  $script" | sha256sum -c -
+          cat > "$cache_dir/quick-sharun.sh" <<'SHARUN'
+          #!/bin/sh
+          log="${GITHUB_WORKSPACE:-/tmp}/quick-sharun-build.log"
+          /bin/sh "${0%/*}/quick-sharun-pinned.sh" "$@" > "$log" 2>&1
+          SHARUN
+          chmod +x "$script" "$cache_dir/quick-sharun.sh"
+
       - name: Configure experimental AppImage
         id: appimage
         working-directory: harbor
@@ -194,7 +214,28 @@ jobs:
         env:
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
           UPINFO: ${{ steps.appimage.outputs.upinfo }}
+          # The pinned script still expects these historical helpers, which
+          # upstream removed from main in September 2026.
+          ANYLINUX_LIB_SOURCE: https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/5e76c43e12c20ccb2f705c6098ca141b2fd368f8/useful-tools/lib/anylinux.c
+          GTK_CLASS_FIX_SOURCE: https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/5e76c43e12c20ccb2f705c6098ca141b2fd368f8/useful-tools/lib/gtk-class-fix.c
         run: timeout --signal=TERM 90m cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage
+
+      - name: Report AppImage bundler failure details
+        if: failure()
+        run: |
+          if [ -s "${GITHUB_WORKSPACE}/quick-sharun-build.log" ]; then
+            tail -n 200 "${GITHUB_WORKSPACE}/quick-sharun-build.log"
+          else
+            echo "No quick-sharun log found; check the earlier build steps."
+          fi
+
+      - name: Preserve AppImage bundler log on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: appimage-bundler-log-${{ inputs.version }}
+          path: quick-sharun-build.log
+          if-no-files-found: ignore
 
       - name: Collect AppImage artifacts
         env:
