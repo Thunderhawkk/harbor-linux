@@ -115,15 +115,24 @@ jobs:
             harbor/android-extension-compat/tools/*.jar
             harbor/android-extension-compat/tools/dex-tools/lib
           key: capstan-deps-arch-${{ hashFiles('harbor/android-extension-compat/tools/deps.sh') }}
+          # Keep successfully downloaded JARs even if a later packaging step fails.
+          save-always: true
+
+      - name: Prefetch Capstan dependencies with verified Maven mirrors
+        run: |
+          set -euo pipefail
+          # Apply to the disposable Harbor checkout. The patch logs every URL
+          # used, fails if the upstream downloader changes, and verifies JARs
+          # against Maven's published digests before accepting a mirror.
+          node scripts/configure-capstan-maven.mjs harbor/android-extension-compat/tools/deps.sh
+          grep -F 'Maven download URL: $url' harbor/android-extension-compat/tools/deps.sh
+          cd harbor/android-extension-compat
+          sh tools/deps.sh
 
       - name: Prepare Harbor workspace
         working-directory: harbor
         run: |
           set -euo pipefail
-          # repo1.maven.org returned HTTP 429 to GitHub's Arch runner. Prefer
-          # Maven Central's canonical host for fresh (uncached) dependency fetches.
-          # This modifies only the temporary Harbor checkout, not its repository.
-          sed -i 's#^M=https://repo1.maven.org/maven2$#M=https://repo.maven.apache.org/maven2#' android-extension-compat/tools/deps.sh
           node <<'EOF'
           const fs = require('fs');
           const workspacePath = 'pnpm-workspace.yaml';
