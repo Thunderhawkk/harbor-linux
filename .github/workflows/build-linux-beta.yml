@@ -59,9 +59,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          source_ref="$(gh api "repos/Harborofficial/Harbor/commits/${INPUT_REF}" --jq '.sha')"
-          version="$(gh api "repos/Harborofficial/Harbor/contents/package.json?ref=${source_ref}" --jq '.content' | tr -d '\n' | base64 --decode | jq -r '.version')"
-          compare_status="$(gh api "repos/Harborofficial/Harbor/compare/7eaf9d4...${source_ref}" --jq '.status')"
+          source_ref="$(gh api "repos/HarborCommunity/Harbor/commits/${INPUT_REF}" --jq '.sha')"
+          version="$(gh api "repos/HarborCommunity/Harbor/contents/package.json?ref=${source_ref}" --jq '.content' | tr -d '\n' | base64 --decode | jq -r '.version')"
+          compare_status="$(gh api "repos/HarborCommunity/Harbor/compare/7eaf9d4...${source_ref}" --jq '.status')"
 
           if ! echo "${compare_status}" | grep -Eq '^(identical|ahead)$'; then
             echo "${INPUT_REF} does not contain Linux build fix 7eaf9d4." >&2

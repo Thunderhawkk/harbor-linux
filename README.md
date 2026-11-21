@@ -1,13 +1,13 @@
 # Harbor for Linux
 
-Linux builds of [Harbor](https://github.com/Harborofficial/Harbor), built from its upstream source by GitHub Actions.
+Linux builds of [Harbor](https://github.com/HarborCommunity/Harbor), built from its upstream source by GitHub Actions.
 
 <p align="center">
   <a href="https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.4"><strong>Download beta</strong></a>
   ·
   <a href="https://github.com/Thunderhawkk/harbor-linux/releases/latest"><strong>Download stable</strong></a>
   ·
-  <a href="https://github.com/Harborofficial/Harbor"><strong>Harbor upstream</strong></a>
+  <a href="https://github.com/HarborCommunity/Harbor"><strong>Harbor upstream</strong></a>
 </p>
 
 > **x86_64 only.** Choose the package that fits your distribution below. Every package download below follows the current [beta release](https://github.com/Thunderhawkk/harbor-linux/releases/tag/beta-v1.0.4).
@@ -19,7 +19,7 @@ Linux builds of [Harbor](https://github.com/Harborofficial/Harbor), built from i
 ### <img src="https://cdn.simpleicons.org/archlinux/1793D1" width="20" height="20" align="absmiddle" alt="" /> Arch Linux
 
 Not published to the AUR from this repository yet. Use one of the prebuilt packages below, or
-build [Harbor](https://github.com/Harborofficial/Harbor) from source.
+build [Harbor](https://github.com/HarborCommunity/Harbor) from source.
 
 ---
 
@@ -129,13 +129,13 @@ Dispatch **Build Harbor Linux Release** from the [Actions tab](https://github.co
 
 ## How it works
 
-Beta is the primary channel. Each beta release is built from an exact `beta-branch` commit of [Harborofficial/Harbor](https://github.com/Harborofficial/Harbor) and published once per Harbor version; later commits with the same version do not create another release. Releases provide `.deb`, `.rpm`, a Flatpak bundle, and an experimental AppImage. Flatpak and AppImage build separately, so either can fail without blocking the core packages.
+Beta is the primary channel. Each beta release is built from an exact `beta-branch` commit of [HarborCommunity/Harbor](https://github.com/HarborCommunity/Harbor) and published once per Harbor version; later commits with the same version do not create another release. Releases provide `.deb`, `.rpm`, a Flatpak bundle, and an experimental AppImage. Flatpak and AppImage build separately, so either can fail without blocking the core packages.
 
 The workflow and the exact upstream source ref for each build are visible in the [Actions tab](https://github.com/Thunderhawkk/harbor-linux/actions).
 
 ## Maintainer setup
 
-- **Beta builds** work with the repository token alone: dispatch *Build Harbor Linux Beta* or let the 5-hour schedule run. The workflow resolves the current `Harborofficial/Harbor@beta-branch` version and publishes `beta-v<version>`.
+- **Beta builds** work with the repository token alone: dispatch *Build Harbor Linux Beta* or let the 5-hour schedule run. The workflow resolves the current `HarborCommunity/Harbor@beta-branch` version and publishes `beta-v<version>`.
 - **Cloudsmith**: `CLOUDSMITH_STABLE_REPOSITORY` (`harbor_official/harbor`) and `CLOUDSMITH_BETA_REPOSITORY` (`harbor_official/harbor-beta`) are set, plus the `CLOUDSMITH_API_KEY` secret. Each channel's Cloudsmith job runs only while its variable exists.
 - **AUR** (optional): set the `AUR_SSH_PRIVATE_KEY` secret and point `aur_package` in `build-linux-beta.yml` at your own AUR package. The AUR step never blocks native packages.
 - **Stable builds**: dispatch *Build Harbor Linux Release*; re-enable its schedule in `build-linux-release.yml` once upstream publishes releases regularly.

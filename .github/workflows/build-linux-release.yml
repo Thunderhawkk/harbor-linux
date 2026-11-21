@@ -43,7 +43,7 @@ jobs:
           if [ -n "${INPUT_TAG}" ]; then
             tag="${INPUT_TAG}"
           else
-            tag="$(gh api repos/Harborofficial/Harbor/releases/latest --jq '.tag_name')"
+            tag="$(gh api repos/HarborCommunity/Harbor/releases/latest --jq '.tag_name')"
           fi
           if [ -z "${tag}" ] || [ "${tag}" = "null" ]; then
             echo "Could not resolve upstream tag" >&2
@@ -53,8 +53,8 @@ jobs:
           version="${tag#v}"
           # The commits endpoint resolves annotated tags to their commit; the git/ref
           # endpoint would hand back the tag object for annotated tags.
-          tag_commit="$(gh api "repos/Harborofficial/Harbor/commits/${tag}" --jq '.sha')"
-          compare_status="$(gh api "repos/Harborofficial/Harbor/compare/7eaf9d4...${tag_commit}" --jq '.status')"
+          tag_commit="$(gh api "repos/HarborCommunity/Harbor/commits/${tag}" --jq '.sha')"
+          compare_status="$(gh api "repos/HarborCommunity/Harbor/compare/7eaf9d4...${tag_commit}" --jq '.status')"
           if echo "${compare_status}" | grep -Eq '^(identical|ahead)$'; then
             contains_linux_fix=true
           else

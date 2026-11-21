@@ -86,7 +86,7 @@ jobs:
       - name: Checkout Harbor source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: Harborofficial/Harbor
+          repository: HarborCommunity/Harbor
           ref: ${{ inputs.source_ref }}
           path: harbor
           fetch-depth: 1

@@ -69,7 +69,7 @@ runs:
         pkgrel=${pkgrel}
         pkgdesc='${package_desc}'
         arch=('x86_64')
-        url='https://github.com/Harborofficial/Harbor'
+        url='https://github.com/HarborCommunity/Harbor'
         license=('MIT')
         depends=('ffmpeg' 'gst-libav' 'gst-plugins-bad' 'gst-plugins-good' 'gtk3' 'libayatana-appindicator' 'mpv' 'systemd-libs' 'webkit2gtk-4.1' 'yt-dlp')
         makedepends=('libarchive')
