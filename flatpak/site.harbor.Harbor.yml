@@ -56,6 +56,10 @@ modules:
         url: https://github.com/haasn/libplacebo.git
         commit: cee9b076f2c63104ccfd497fa79c39a867293ec4
 
+  # mpv's on-screen controls are a built-in Lua script. Harbor's own player draws its
+  # own controls, but "Play in my own mpv" opens /app/bin/mpv as a window of its own.
+  - shared-modules/luajit/luajit.json
+
   - name: mpv
     buildsystem: meson
     config-opts:
@@ -65,7 +69,7 @@ modules:
       - -Dbuild-date=false
       - -Dmanpage-build=disabled
       - -Dtests=false
-      - -Dlua=disabled
+      - -Dlua=luajit
       - -Djavascript=disabled
     sources:
       - type: git
