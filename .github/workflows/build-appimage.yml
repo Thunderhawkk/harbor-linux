@@ -165,6 +165,21 @@ jobs:
             ln -sf /usr/bin/yt-dlp src-tauri/binaries/yt-dlp-x86_64-unknown-linux-gnu
           fi
 
+      - name: Prepare pinned Linux HDR runtime
+        working-directory: harbor
+        run: |
+          set -euo pipefail
+          if [[ ! -f tools/linux-hdr-probe/embedded.c ]]; then exit 0; fi
+          test -f scripts/linux-hdr-runtime.sh
+          pacman -S --noconfirm --needed meson ninja nasm python-jinja python-markupsafe libffi expat libxml2 wayland wayland-protocols libglvnd gnutls dav1d libass libdrm libva libvdpau luajit shaderc vulkan-headers vulkan-icd-loader lcms2 xxhash zlib libpulse pipewire libxkbcommon libx11 libxext libxrandr libxpresent libxscrnsaver libxinerama libxv libxfixes libxcb mesa libdisplay-info libjpeg-turbo uchardet zimg
+          work="$RUNNER_TEMP/harbor-hdr-runtime"
+          bash scripts/linux-hdr-runtime.sh "$work"
+          node scripts/configure-linux-hdr-bundle.mjs "$work/runtime" appimage src-tauri/tauri.linux-hdr.generated.conf.json
+          echo "HARBOR_LINUX_HDR_LIBDIR=$work/prefix/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$work/prefix/lib/pkgconfig:$work/prefix/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$work/prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "HARBOR_LINUX_HDR_RUNTIME=$work/runtime" >> "$GITHUB_ENV"
+
       - name: Install experimental Tauri bundler
         run: |
           set -euo pipefail
@@ -227,7 +242,13 @@ jobs:
           # upstream removed from main in September 2026.
           ANYLINUX_LIB_SOURCE: https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/5e76c43e12c20ccb2f705c6098ca141b2fd368f8/useful-tools/lib/anylinux.c
           GTK_CLASS_FIX_SOURCE: https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/5e76c43e12c20ccb2f705c6098ca141b2fd368f8/useful-tools/lib/gtk-class-fix.c
-        run: timeout --signal=TERM 90m cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ -n "${HARBOR_LINUX_HDR_RUNTIME:-}" ]]; then
+            args+=(--config src-tauri/tauri.linux-hdr.generated.conf.json)
+          fi
+          timeout --signal=TERM 90m cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage "${args[@]}"
 
       - name: Report AppImage bundler failure details
         if: failure()

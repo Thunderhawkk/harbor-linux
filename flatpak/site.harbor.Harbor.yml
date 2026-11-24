@@ -51,10 +51,11 @@ modules:
       - -Ddefault_library=shared
       - -Dtests=false
       - -Ddemos=false
+      - -Dopengl=enabled
     sources:
       - type: git
         url: https://github.com/haasn/libplacebo.git
-        commit: cee9b076f2c63104ccfd497fa79c39a867293ec4
+        commit: 275f7dea27924cdd34ab2e6c20e448b6bc4fab65
 
   # mpv's on-screen controls are a built-in Lua script. Harbor's own player draws its
   # own controls, but "Play in my own mpv" opens /app/bin/mpv as a window of its own.
@@ -71,10 +72,15 @@ modules:
       - -Dtests=false
       - -Dlua=luajit
       - -Djavascript=disabled
+      - -Dgl=enabled
+      - -Dplain-gl=enabled
+      - -Degl=enabled
+      - -Dwayland=enabled
+      - -Degl-wayland=enabled
     sources:
       - type: git
         url: https://github.com/mpv-player/mpv.git
-        commit: e48ac7ce08462f5e33af6ef9deeac6fa87eef01e
+        commit: d32c910be63d1dd325c7b3efeaa09c3c4c8d51ce
 
   - name: yt-dlp
     buildsystem: simple
@@ -90,6 +96,11 @@ modules:
     build-commands:
       - node flatpak-node/pnpm-cli/bin/pnpm.cjs install --offline --frozen-lockfile --trust-lockfile
       - node node_modules/@tauri-apps/cli/tauri.js build --config src-tauri/tauri.flatpak.conf.json --no-bundle
+      - |
+        if test -f tools/linux-hdr-probe/embedded.c; then
+          make -C tools/linux-hdr-probe check embedded COLOR_XML="$PWD/hdr-wayland-protocols/staging/color-management/color-management-v1.xml"
+          install -Dm755 tools/linux-hdr-probe/libharbor-linux-hdr.so /app/lib/harbor-hdr/libharbor-linux-hdr.so
+        fi
       - install -Dm755 src-tauri/target/release/harbor /app/bin/harbor
       - install -Dm644 flatpak/site.harbor.Harbor.desktop /app/share/applications/site.harbor.Harbor.desktop
       - install -Dm644 flatpak/site.harbor.Harbor.metainfo.xml /app/share/metainfo/site.harbor.Harbor.metainfo.xml
@@ -109,6 +120,10 @@ modules:
           - dist
           - harbor-core/target
           - src-tauri/target
+      - type: git
+        url: https://github.com/wayland-mirror/wayland-protocols.git
+        commit: ee78491a237eaff9389a0ccf8680521d074407d3
+        dest: hdr-wayland-protocols
       - type: archive
         url: https://registry.npmjs.org/pnpm/-/pnpm-11.9.0.tgz
         sha256: 2b567aa66026238078ac2e0a33bec3febd60e962987aac697456f3180819b287

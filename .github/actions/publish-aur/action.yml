@@ -60,6 +60,14 @@ runs:
           provides="provides=('harbor-stremio' 'harbor')"
           conflicts="conflicts=('harbor-stremio' 'harbor' 'harbor-stremio-git')"
         fi
+        # The AUR payload is the verified Debian asset. Only newer HDR-enabled
+        # payloads need the additional host libraries.
+        hdr_depends=""
+        test -f "dist/$DEB_ASSET"
+        contents="$(dpkg-deb -c "dist/$DEB_ASSET")"
+        if grep -q 'usr/lib/harbor-hdr/libharbor-linux-hdr.so' <<< "$contents"; then
+          hdr_depends=" 'gnutls' 'dav1d' 'libass' 'libdrm' 'libva' 'libvdpau' 'luajit' 'shaderc' 'lcms2' 'xxhash' 'libffi' 'expat' 'alsa-lib' 'libpulse' 'pipewire' 'libxkbcommon' 'libx11' 'libxext' 'libxrandr' 'libxpresent' 'libxscrnsaver' 'libxinerama' 'libxv' 'libxfixes' 'libxcb' 'mesa' 'libdisplay-info' 'libjpeg-turbo' 'uchardet' 'zimg' 'vulkan-icd-loader' 'zlib' 'wayland>=1.23'"
+        fi
         pkgrel="${PACKAGE_REVISION}"
         cat > "${tmpdir}/PKGBUILD" <<EOF
         # Maintainer: Thunderhawkk <thunderhawkk@users.noreply.github.com>
@@ -71,7 +79,7 @@ runs:
         arch=('x86_64')
         url='https://github.com/HarborCommunity/Harbor'
         license=('MIT')
-        depends=('ffmpeg' 'gst-libav' 'gst-plugins-bad' 'gst-plugins-good' 'gtk3' 'libayatana-appindicator' 'mpv' 'systemd-libs' 'webkit2gtk-4.1' 'yt-dlp')
+        depends=('ffmpeg' 'gst-libav' 'gst-plugins-bad' 'gst-plugins-good' 'gtk3' 'libayatana-appindicator' 'mpv' 'systemd-libs' 'webkit2gtk-4.1' 'yt-dlp'${hdr_depends})
         makedepends=('libarchive')
         ${provides}
         ${conflicts}
@@ -83,6 +91,10 @@ runs:
           bsdtar --no-same-owner -xf "\$srcdir/Harbor_\${pkgver}-\${pkgrel}_amd64.deb" -C "\$extract"
           bsdtar --no-same-owner -xf "\$(find "\$extract" -maxdepth 1 -type f -name 'data.tar.*' -print -quit)" -C "\$pkgdir"
           rm -f "\$pkgdir/usr/bin/ffmpeg" "\$pkgdir/usr/bin/ffprobe" "\$pkgdir/usr/bin/yt-dlp"
+          if [[ -d "\$pkgdir/usr/lib/harbor-hdr" ]]; then
+            # Arch's GTK/Mesa should use Arch's current Wayland client family.
+            rm -f "\$pkgdir/usr/lib/harbor-hdr"/libwayland-*.so.*
+          fi
           if [[ -x "\$pkgdir/usr/bin/harbor" && ! -e "\$pkgdir/usr/bin/harbor-stremio" ]]; then ln -s harbor "\$pkgdir/usr/bin/harbor-stremio"; fi
         }
         EOF

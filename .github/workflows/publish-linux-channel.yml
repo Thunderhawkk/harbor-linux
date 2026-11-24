@@ -126,22 +126,33 @@ jobs:
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           EOF
 
+      - name: Configure private HDR runtime for native packages
+        working-directory: harbor
+        run: |
+          set -euo pipefail
+          config=src-tauri/tauri.linux-system.conf.json
+          if [[ -n "${HARBOR_LINUX_HDR_RUNTIME:-}" ]]; then
+            config=src-tauri/tauri.linux-hdr.generated.conf.json
+            node scripts/configure-linux-hdr-bundle.mjs "$HARBOR_LINUX_HDR_RUNTIME" native "$config"
+          fi
+          echo "HARBOR_NATIVE_CONFIG=$config" >> "$GITHUB_ENV"
+
       # Build native DEB/RPM packages together so Tauri stages the app resources
       # only once. Two consecutive builds can conflict over shared output paths.
       - name: Build Debian and RPM bundles
         if: inputs.target == 'all' || inputs.target == 'native'
         working-directory: harbor
-        run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles deb,rpm
+        run: pnpm tauri build --config "$HARBOR_NATIVE_CONFIG" --target x86_64-unknown-linux-gnu --bundles deb,rpm
 
       - name: Build Debian bundle
         if: inputs.target == 'deb'
         working-directory: harbor
-        run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles deb
+        run: pnpm tauri build --config "$HARBOR_NATIVE_CONFIG" --target x86_64-unknown-linux-gnu --bundles deb
 
       - name: Build RPM bundle
         if: inputs.target == 'rpm'
         working-directory: harbor
-        run: pnpm tauri build --config src-tauri/tauri.linux-system.conf.json --target x86_64-unknown-linux-gnu --bundles rpm
+        run: pnpm tauri build --config "$HARBOR_NATIVE_CONFIG" --target x86_64-unknown-linux-gnu --bundles rpm
 
       - name: Validate Linux library ABI
         env:
