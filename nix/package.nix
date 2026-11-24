@@ -68,6 +68,7 @@ stdenv.mkDerivation {
     hdrLibs=""
     if [ -d "$out/lib/harbor-hdr" ]; then
       hdrLibs="$out/lib/harbor-hdr:"
+      LD_LIBRARY_PATH="$hdrLibs${lib.makeLibraryPath (buildLibs ++ runtimeLibs)}"         "$out/lib/harbor-hdr/check-api" "$out/lib/harbor-hdr/libharbor-linux-hdr.so"
     fi
     wrapProgram "$out/bin/harbor" \
       "''${gappsWrapperArgs[@]}" \
@@ -75,6 +76,9 @@ stdenv.mkDerivation {
       --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${lib.makeSearchPath "lib/gstreamer-1.0" gstPlugins}" \
       --prefix LD_LIBRARY_PATH : "$hdrLibs${lib.makeLibraryPath (buildLibs ++ runtimeLibs)}" \
       --prefix PATH : "${lib.makeBinPath [ ffmpeg yt-dlp ]}"
+    if [ -d "$out/lib/harbor-hdr" ]; then
+      "$out/bin/harbor" --verify-linux-hdr-runtime
+    fi
   '';
 
   meta = {

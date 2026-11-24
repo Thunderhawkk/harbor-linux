@@ -170,11 +170,32 @@ jobs:
             dpkg-deb -x "${deb}" "${tmpdir}"
             readelf -d "${tmpdir}/usr/bin/harbor" | grep 'Shared library: \[libmpv.so.2\]'
             if readelf -d "${tmpdir}/usr/bin/harbor" | grep -q 'Shared library: \[libmpv.so.1\]'; then exit 1; fi
+            if [[ -n "${HARBOR_LINUX_HDR_RUNTIME:-}" ]]; then
+              runtime="$tmpdir/usr/lib/harbor-hdr"
+              test -s "$runtime/libmpv.so.2"
+              test -s "$runtime/libharbor-linux-hdr.so"
+              env -u LD_LIBRARY_PATH "$runtime/check-api" "$runtime/libharbor-linux-hdr.so"
+              resolved="$(env -u LD_LIBRARY_PATH ldd "$tmpdir/usr/bin/harbor" | awk '$1 == "libmpv.so.2" {print $3}')"
+              test "$(realpath "$resolved")" = "$(realpath "$runtime/libmpv.so.2")"
+              env -u LD_LIBRARY_PATH "$tmpdir/usr/bin/harbor" --verify-linux-hdr-runtime
+            fi
           fi
           if [ "${CHANNEL}" = beta ] && [ "${TARGET}" != rpm ]; then
             test "$(dpkg-deb -f "${deb}" Package)" = harbor-beta
             dpkg-deb -f "${deb}" Conflicts | grep -Fx harbor
             dpkg-deb -f "${deb}" Replaces | grep -Fx harbor
+          fi
+          if [[ -n "${HARBOR_LINUX_HDR_RUNTIME:-}" && "${TARGET}" != deb ]]; then
+            rpm="$(find harbor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm -type f -name '*.rpm' | head -n 1)"
+            test -n "$rpm"
+            rpm_root="$(mktemp -d)"
+            (cd "$rpm_root" && bsdtar -xf "$GITHUB_WORKSPACE/$rpm")
+            runtime="$rpm_root/usr/lib/harbor-hdr"
+            env -u LD_LIBRARY_PATH "$runtime/check-api" "$runtime/libharbor-linux-hdr.so"
+            resolved="$(env -u LD_LIBRARY_PATH ldd "$rpm_root/usr/bin/harbor" | awk '$1 == "libmpv.so.2" {print $3}')"
+            test "$(realpath "$resolved")" = "$(realpath "$runtime/libmpv.so.2")"
+            env -u LD_LIBRARY_PATH "$rpm_root/usr/bin/harbor" --verify-linux-hdr-runtime
+            rm -rf "$rpm_root"
           fi
           if [ "${CHANNEL}" = beta ] && [ "${TARGET}" != deb ]; then
             rpm="$(find harbor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm -type f -name '*.rpm' | head -n 1)"

@@ -267,6 +267,22 @@ jobs:
           path: quick-sharun-build.log
           if-no-files-found: ignore
 
+      - name: Validate embedded HDR files in AppImage
+        if: env.HARBOR_LINUX_HDR_RUNTIME != ''
+        run: |
+          set -euo pipefail
+          appimage="$(find "$GITHUB_WORKSPACE/harbor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage" -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+          test -n "$appimage"
+          tmpdir="$(mktemp -d)"
+          trap 'rm -rf "$tmpdir"' EXIT
+          cd "$tmpdir"
+          "$appimage" --appimage-extract >/dev/null
+          runtime="$(find squashfs-root -type f -name libharbor-linux-hdr.so -printf '%h\n' -quit)"
+          test -n "$runtime"
+          test -s "$runtime/libmpv.so.2"
+          env -u LD_LIBRARY_PATH "$runtime/check-api" "$PWD/$runtime/libharbor-linux-hdr.so"
+          env -u LD_LIBRARY_PATH APPIMAGE_EXTRACT_AND_RUN=1 "$appimage" --verify-linux-hdr-runtime
+
       - name: Collect AppImage artifacts
         env:
           VERSION: ${{ steps.package.outputs.version }}

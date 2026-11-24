@@ -94,6 +94,7 @@ runs:
           if [[ -d "\$pkgdir/usr/lib/harbor-hdr" ]]; then
             # Arch's GTK/Mesa should use Arch's current Wayland client family.
             rm -f "\$pkgdir/usr/lib/harbor-hdr"/libwayland-*.so.*
+            "\$pkgdir/usr/bin/harbor" --verify-linux-hdr-runtime
           fi
           if [[ -x "\$pkgdir/usr/bin/harbor" && ! -e "\$pkgdir/usr/bin/harbor-stremio" ]]; then ln -s harbor "\$pkgdir/usr/bin/harbor-stremio"; fi
         }
