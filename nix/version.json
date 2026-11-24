@@ -1,0 +1,12 @@
+{
+  "beta": {
+    "version": "1.0.4-1",
+    "url": "https://github.com/Thunderhawkk/harbor-linux/releases/download/beta-v1.0.4/Harbor_1.0.4-1_amd64.deb",
+    "hash": "sha256-uuImDvKZJcZIWTmUoiO1hvAmKCCyV5OiOtyBQj0Klwo="
+  },
+  "stable": {
+    "version": "1.0.0-1",
+    "url": "https://github.com/Thunderhawkk/harbor-linux/releases/download/v1.0.0/Harbor_1.0.0-1_amd64.deb",
+    "hash": "sha256-C9JeigLpE54tYwCRfSVNYdtmtWkgv41IxCvARJgXZyc="
+  }
+}

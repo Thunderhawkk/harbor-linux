@@ -331,6 +331,14 @@ jobs:
           deb_sha256: ${{ steps.published_deb.outputs.sha256 }}
           repository: ${{ github.repository }}
 
+  update-nix:
+    name: Update Nix flake after Debian publication
+    needs: publish
+    if: needs.publish.result == 'success' && inputs.target != 'rpm'
+    uses: ./.github/workflows/update-nix.yml
+    permissions:
+      contents: write
+
   cloudsmith:
     name: Publish ${{ inputs.channel }} Linux packages to Cloudsmith
     needs: [ensure-release, build, publish]

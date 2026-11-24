@@ -51,26 +51,42 @@ sudo dnf install harbor-beta
 
 ### <img src="https://cdn.simpleicons.org/nixos/5277C3" width="20" height="20" align="absmiddle" alt="" /> NixOS
 
-Install Harbor using the community Nix flake at [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake).
+This repository now includes a Nix flake for x86_64 Linux, packaging the same
+verified Debian release artifacts as the other Linux distributions. **Experimental until
+validated in Nix CI.**
 
-Run directly without installing:
+Run the beta without installing (flakes enabled):
 
 ```bash
-nix run github:axioncs/harbor-flake
+nix run github:Thunderhawkk/harbor-linux#beta
 ```
 
-Or add it as a flake input:
+Install it into your profile:
+
+```bash
+nix profile install github:Thunderhawkk/harbor-linux#beta
+```
+
+For stable, replace `#beta` with `#stable`. To use the flake in NixOS or Home Manager:
 
 ```nix
 {
   inputs.harbor = {
-    url = "github:axioncs/harbor-flake";
+    url = "github:Thunderhawkk/harbor-linux";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 }
 ```
 
-See [axioncs/harbor-flake](https://github.com/axioncs/harbor-flake) for Home Manager setup and further options.
+Add `inputs.harbor.packages.${pkgs.stdenv.hostPlatform.system}.beta` to
+`environment.systemPackages` (NixOS) or `home.packages` (Home Manager).
+Existing users of the [original community flake](https://github.com/axioncs/harbor-flake)
+can replace the input URL and run `nix flake update harbor` in their configuration.
+The original packaging is credited in [nix/LICENSE](nix/LICENSE).
+
+The flake metadata is refreshed after verified Debian publications and by a
+scheduled recovery workflow; both package channels must build before an update is
+published. See [Nix packaging notes](nix/README.md) for details.
 
 ---
 
