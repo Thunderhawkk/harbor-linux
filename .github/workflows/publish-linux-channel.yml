@@ -283,6 +283,20 @@ jobs:
           set -euo pipefail
           python3 -m unittest discover -s nix -p 'test_*.py'
           bash scripts/build-nix-from-deb.sh "dist/Harbor_${VERSION}-${PACKAGE_REVISION}_amd64.deb" "$CHANNEL" "$VERSION-$PACKAGE_REVISION"
+      - name: Export validated Nix runtime closure
+        if: inputs.target != 'rpm'
+        run: |
+          set -euo pipefail
+          bash scripts/export-nix-closure.sh nix-result nix-artifact
+      - name: Upload downloadable Nix closure
+        if: inputs.target != 'rpm'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: harbor-nixos-${{ inputs.channel }}-${{ inputs.version }}-${{ inputs.package_revision }}-x86_64
+          path: nix-artifact/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
   publish:
     name: Publish Linux bundles

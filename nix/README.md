@@ -52,3 +52,9 @@ PRs changing Nix packaging also build both channels.
   release assets or an independent binary cache.
 - The nixpkgs lock is deliberately not updated during each Harbor release;
   update it separately and validate both channels.
+
+## Downloadable runtime closure
+
+Native Linux workflows that build a Debian package also validate the Nix derivation against that exact DEB. Download the matching `harbor-nixos-<channel>-<version>-<revision>-x86_64` artifact from the successful GitHub Actions run. It includes the compressed runtime closure, store path, path manifest, checksums, and import instructions. No Harbor rebuild is required. These are CI artifacts retained for seven days, not separately published release assets.
+
+Only import a closure from a CI run you trust; the checksum verifies integrity, not the publisher's identity. Physical HDR still requires a compatible display, compositor and GPU.
