@@ -2,14 +2,17 @@
 { lib, stdenv, fetchurl, autoPatchelfHook, dpkg, makeWrapper, wrapGAppsHook3,
   mpv-unwrapped, openssl, systemd, dbus, gtk3, gdk-pixbuf, cairo, glib,
   webkitgtk_4_1, libsoup_3, libayatana-appindicator, libglvnd, vulkan-loader,
-  glib-networking, gst_all_1, ffmpeg, yt-dlp, libplacebo, wayland, pname, info }:
+  glib-networking, gst_all_1, ffmpeg, yt-dlp, libplacebo, wayland, slang, libbsd, libxv ? null, xorg ? null, pname, info }:
 
 let
   buildLibs = [
     mpv-unwrapped openssl systemd dbus gtk3 gdk-pixbuf cairo glib wayland
     webkitgtk_4_1 libsoup_3 stdenv.cc.cc.lib
   ];
-  runtimeLibs = [ libayatana-appindicator libglvnd vulkan-loader ];
+  # The Ubuntu libmpv enables XVideo; its optional compatibility libraries
+  # also need the host S-Lang and BSD support libraries.
+  xvideo = if libxv != null then libxv else xorg.libXv;
+  runtimeLibs = [ libayatana-appindicator libglvnd vulkan-loader xvideo slang libbsd ];
   gstPlugins = with gst_all_1; [
     gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-libav
   ];
@@ -47,7 +50,7 @@ stdenv.mkDerivation {
     if [ -d "$out/lib/harbor-hdr" ]; then
       # Nix provides its own newer Wayland family; keep GTK, Mesa and the
       # renderer on that one ABI instead of overriding the Nix graphics stack.
-      rm -f "$out/lib/harbor-hdr"/libwayland-*.so.*
+      rm -f "$out/lib/harbor-hdr"/libwayland-*.so.* "$out/lib/harbor-hdr"/libvulkan.so.*
     fi
     # Desktop entries with a /usr/bin path cannot launch from the Nix store.
     for desktop in "$out"/share/applications/*.desktop; do
@@ -68,7 +71,6 @@ stdenv.mkDerivation {
     hdrLibs=""
     if [ -d "$out/lib/harbor-hdr" ]; then
       hdrLibs="$out/lib/harbor-hdr:"
-      LD_LIBRARY_PATH="$hdrLibs${lib.makeLibraryPath (buildLibs ++ runtimeLibs)}"         "$out/lib/harbor-hdr/check-api" "$out/lib/harbor-hdr/libharbor-linux-hdr.so"
     fi
     wrapProgram "$out/bin/harbor" \
       "''${gappsWrapperArgs[@]}" \
@@ -76,9 +78,19 @@ stdenv.mkDerivation {
       --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${lib.makeSearchPath "lib/gstreamer-1.0" gstPlugins}" \
       --prefix LD_LIBRARY_PATH : "$hdrLibs${lib.makeLibraryPath (buildLibs ++ runtimeLibs)}" \
       --prefix PATH : "${lib.makeBinPath [ ffmpeg yt-dlp ]}"
+  '';
+
+  # autoPatchelfHook is a post-fixup hook. Testing in postFixup itself
+  # executes Debian's original loader before it has been rewritten.
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
     if [ -d "$out/lib/harbor-hdr" ]; then
+      LD_LIBRARY_PATH="$out/lib/harbor-hdr:${lib.makeLibraryPath (buildLibs ++ runtimeLibs)}" \
+        "$out/lib/harbor-hdr/check-api" "$out/lib/harbor-hdr/libharbor-linux-hdr.so"
       "$out/bin/harbor" --verify-linux-hdr-runtime
     fi
+    runHook postInstallCheck
   '';
 
   meta = {
