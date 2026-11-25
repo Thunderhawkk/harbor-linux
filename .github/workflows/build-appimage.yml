@@ -360,7 +360,7 @@ jobs:
 
           tmpfile="$(mktemp)"
           trap 'rm -f "${tmpfile}"' EXIT
-          grep -v -E '  Harbor_.*_amd64\.AppImage(\.zsync)?$' "dist/${checksums}" > "${tmpfile}" || true
+          grep -v -E '  (dist/)?Harbor_.*_amd64\.AppImage(\.zsync)?$' "dist/${checksums}" > "${tmpfile}" || true
           (cd dist && sha256sum ./*.AppImage ./*.AppImage.zsync | sed 's#  \./#  #') >> "$tmpfile"
           sort -k 2,2 "${tmpfile}" > "dist/${checksums}"
 

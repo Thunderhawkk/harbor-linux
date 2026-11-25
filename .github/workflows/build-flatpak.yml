@@ -268,7 +268,7 @@ jobs:
 
           tmpfile="$(mktemp)"
           trap 'rm -f "${tmpfile}"' EXIT
-          grep -v -F "  ${asset}" "dist/${checksums}" > "${tmpfile}" || true
-          sha256sum "dist/${asset}" >> "${tmpfile}"
+          grep -v -F -e "  ${asset}" -e "  dist/${asset}" "dist/${checksums}" > "${tmpfile}" || true
+          (cd dist && sha256sum "$asset") >> "$tmpfile"
           sort -k 2,2 "${tmpfile}" > "dist/${checksums}"
           gh release upload "${TAG}" dist/* --repo "${REPOSITORY}" --clobber
