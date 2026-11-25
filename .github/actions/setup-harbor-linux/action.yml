@@ -53,7 +53,7 @@ runs:
         # Older stable refs do not contain the renderer and keep their existing build.
         if [[ ! -f tools/linux-hdr-probe/embedded.c ]]; then exit 0; fi
         test -f scripts/linux-hdr-runtime.sh
-        sudo apt-get install -y build-essential meson ninja-build nasm git python3-jinja2 python3-markupsafe libffi-dev libexpat1-dev libxml2-dev libwayland-dev wayland-protocols libegl-dev libgl-dev libgnutls28-dev libdav1d-dev libass-dev libdrm-dev libva-dev libvdpau-dev libluajit-5.1-dev libshaderc-dev libvulkan-dev liblcms2-dev libxxhash-dev zlib1g-dev libpulse-dev libpipewire-0.3-dev libxkbcommon-dev libx11-dev libxext-dev libxrandr-dev libxpresent-dev libxss-dev libxinerama-dev libxv-dev libxfixes-dev libxcb1-dev libgbm-dev libdisplay-info-dev libjpeg-dev libuchardet-dev libzimg-dev
+        sudo apt-get install -y build-essential cmake meson ninja-build nasm git python3-jinja2 python3-markupsafe libffi-dev libexpat1-dev libxml2-dev libwayland-dev wayland-protocols libegl-dev libgl-dev libgnutls28-dev libdav1d-dev libass-dev libdrm-dev libva-dev libvdpau-dev libluajit-5.1-dev libshaderc-dev libvulkan-dev liblcms2-dev libxxhash-dev zlib1g-dev libpulse-dev libpipewire-0.3-dev libxkbcommon-dev libx11-dev libxext-dev libxrandr-dev libxpresent-dev libxss-dev libxinerama-dev libxv-dev libxfixes-dev libxcb1-dev libgbm-dev libdisplay-info-dev libjpeg-dev libuchardet-dev libzimg-dev libbluray-dev libudfread0 libicu74 libbsd0 libslang2
         work="$RUNNER_TEMP/harbor-hdr-runtime"
         bash scripts/linux-hdr-runtime.sh "$work"
         echo "HARBOR_LINUX_HDR_LIBDIR=$work/prefix/lib" >> "$GITHUB_ENV"

@@ -171,7 +171,7 @@ jobs:
           set -euo pipefail
           if [[ ! -f tools/linux-hdr-probe/embedded.c ]]; then exit 0; fi
           test -f scripts/linux-hdr-runtime.sh
-          pacman -S --noconfirm --needed meson ninja nasm python-jinja python-markupsafe libffi expat libxml2 wayland wayland-protocols libglvnd gnutls dav1d libass libdrm libva libvdpau luajit shaderc vulkan-headers vulkan-icd-loader lcms2 xxhash zlib libpulse pipewire libxkbcommon libx11 libxext libxrandr libxpresent libxscrnsaver libxinerama libxv libxfixes libxcb mesa libdisplay-info libjpeg-turbo uchardet zimg
+          pacman -S --noconfirm --needed cmake meson ninja nasm python-jinja python-markupsafe libffi expat libxml2 wayland wayland-protocols libglvnd gnutls dav1d libass libdrm libva libvdpau luajit shaderc vulkan-headers vulkan-icd-loader lcms2 xxhash zlib libpulse pipewire libxkbcommon libx11 libxext libxrandr libxpresent libxss libxinerama libxv libxfixes libxcb mesa libdisplay-info libjpeg-turbo uchardet zimg
           work="$RUNNER_TEMP/harbor-hdr-runtime"
           bash scripts/linux-hdr-runtime.sh "$work"
           node scripts/configure-linux-hdr-bundle.mjs "$work/runtime" appimage src-tauri/tauri.linux-hdr.generated.conf.json
@@ -205,6 +205,17 @@ jobs:
           cat > "$cache_dir/quick-sharun.sh" <<'SHARUN'
           #!/bin/sh
           log="${GITHUB_WORKSPACE:-/tmp}/quick-sharun-build.log"
+          set -eu
+          if [ -n "${HARBOR_LINUX_HDR_RUNTIME:-}" ]; then
+            test -n "${APPDIR:-}"
+            private=/usr/lib/harbor-hdr
+            test ! -e "$private"
+            mkdir -p "$private" "$APPDIR/lib/harbor-hdr"
+            cp -a "$HARBOR_LINUX_HDR_RUNTIME/." "$private/"
+            cp -a "$private/." "$APPDIR/lib/harbor-hdr/"
+            export LD_LIBRARY_PATH="$private${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            set -- "$@" "$private/libharbor-linux-hdr.so"
+          fi
           /bin/sh "${0%/*}/quick-sharun-pinned.sh" "$@" > "$log" 2>&1
           SHARUN
           chmod +x "$script" "$cache_dir/quick-sharun.sh"
@@ -277,11 +288,19 @@ jobs:
           trap 'rm -rf "$tmpdir"' EXIT
           cd "$tmpdir"
           "$appimage" --appimage-extract >/dev/null
-          runtime="$(find squashfs-root -type f -name libharbor-linux-hdr.so -printf '%h\n' -quit)"
-          test -n "$runtime"
+          runtime="$PWD/squashfs-root/lib/harbor-hdr"
+          test -s "$runtime/libharbor-linux-hdr.so" || { find squashfs-root -iname '*harbor*' | head -80; echo "HDR renderer missing from AppDir"; exit 1; }
           test -s "$runtime/libmpv.so.2"
-          env -u LD_LIBRARY_PATH "$runtime/check-api" "$PWD/$runtime/libharbor-linux-hdr.so"
+          env -u LD_LIBRARY_PATH "$PWD/squashfs-root/AppRun" --verify-linux-hdr-runtime
           env -u LD_LIBRARY_PATH APPIMAGE_EXTRACT_AND_RUN=1 "$appimage" --verify-linux-hdr-runtime
+
+      - name: Preserve bundler log on HDR verification failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: appimage-hdr-verification-log
+          path: quick-sharun-build.log
+          if-no-files-found: ignore
 
       - name: Collect AppImage artifacts
         env:
@@ -294,7 +313,7 @@ jobs:
           test -f "${zsync}"
           mkdir dist
           cp "${appimage}" "${zsync}" dist/
-          sha256sum "${appimage}" "${zsync}" > dist/SHA256SUMS-appimage.txt
+          (cd dist && sha256sum "$(basename "$appimage")" "$(basename "$zsync")" > SHA256SUMS-appimage.txt && sha256sum -c SHA256SUMS-appimage.txt)
           jq -n \
             --arg source_ref "${{ steps.package.outputs.source_ref }}" \
             --arg version "${VERSION}" \
@@ -342,7 +361,7 @@ jobs:
           tmpfile="$(mktemp)"
           trap 'rm -f "${tmpfile}"' EXIT
           grep -v -E '  Harbor_.*_amd64\.AppImage(\.zsync)?$' "dist/${checksums}" > "${tmpfile}" || true
-          sha256sum dist/*.AppImage dist/*.AppImage.zsync >> "${tmpfile}"
+          (cd dist && sha256sum ./*.AppImage ./*.AppImage.zsync | sed 's#  \./#  #') >> "$tmpfile"
           sort -k 2,2 "${tmpfile}" > "dist/${checksums}"
 
           gh release upload "${TAG}" \
