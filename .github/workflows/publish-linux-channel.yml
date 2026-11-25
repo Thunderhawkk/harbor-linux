@@ -47,8 +47,8 @@ concurrency:
 jobs:
   ensure-release:
     name: Ensure GitHub release exists
-    needs: build
-    if: always() && (needs.build.result == 'success' || inputs.target == 'flatpak' || inputs.target == 'appimage')
+    needs: [build, validate-native]
+    if: always() && ((needs.build.result == 'success' && needs.validate-native.result == 'success') || inputs.target == 'flatpak' || inputs.target == 'appimage')
     runs-on: ubuntu-24.04
     environment: release
     permissions:
@@ -240,9 +240,53 @@ jobs:
           path: dist/
           if-no-files-found: error
 
+  validate-native:
+    name: Validate distribution packages before publication
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: linux-bundles-${{ inputs.version }}-${{ inputs.package_revision }}
+          path: dist
+      - name: Verify native package checksums
+        env:
+          VERSION: ${{ inputs.version }}
+        run: (cd dist && sha256sum -c "SHA256SUMS-$VERSION.txt")
+      - name: Install native packages in clean Ubuntu and Fedora containers
+        env:
+          VERSION: ${{ inputs.version }}
+          PACKAGE_REVISION: ${{ inputs.package_revision }}
+          TARGET: ${{ inputs.target }}
+        run: bash scripts/validate-native-packages.sh dist "$VERSION" "$PACKAGE_REVISION" "$TARGET"
+      - name: Build and install Arch package from the verified DEB
+        if: inputs.target != 'rpm'
+        env:
+          VERSION: ${{ inputs.version }}
+          PACKAGE_REVISION: ${{ inputs.package_revision }}
+          CHANNEL: ${{ inputs.channel }}
+          AUR_PACKAGE: ${{ inputs.aur_package }}
+        run: bash scripts/validate-aur-package.sh
+      - uses: cachix/install-nix-action@382a9ed9481c7c1f94f68b72ef105b3417c73877 # v32.1.0
+        if: inputs.target != 'rpm'
+      - name: Validate Nix package directly from the verified DEB
+        if: inputs.target != 'rpm'
+        env:
+          VERSION: ${{ inputs.version }}
+          PACKAGE_REVISION: ${{ inputs.package_revision }}
+          CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s nix -p 'test_*.py'
+          bash scripts/build-nix-from-deb.sh "dist/Harbor_${VERSION}-${PACKAGE_REVISION}_amd64.deb" "$CHANNEL" "$VERSION-$PACKAGE_REVISION"
+
   publish:
     name: Publish Linux bundles
-    needs: [ensure-release, build]
+    needs: [ensure-release, build, validate-native]
     runs-on: ubuntu-24.04
     environment: release
     permissions:
@@ -560,6 +604,6 @@ jobs:
           tmpfile="$(mktemp)"
           trap 'rm -f "${tmpfile}"' EXIT
           grep -v -E '  Harbor_.*_amd64\.AppImage(\.zsync)?$' "dist/${checksums}" > "${tmpfile}" || true
-          sha256sum dist/*.AppImage dist/*.AppImage.zsync >> "${tmpfile}"
+          (cd dist && sha256sum ./*.AppImage ./*.AppImage.zsync | sed 's#  \./#  #') >> "$tmpfile"
           sort -k 2,2 "${tmpfile}" > "dist/${checksums}"
           gh release upload "${TAG}" dist/*.AppImage dist/*.AppImage.zsync "dist/${checksums}" --repo "${REPOSITORY}" --clobber

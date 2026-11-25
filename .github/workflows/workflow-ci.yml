@@ -2,10 +2,10 @@ name: Validate workflows
 
 on:
   pull_request:
-    paths: [.github/actions/**, .github/workflows/**]
+    paths: [.github/actions/**, .github/workflows/**, scripts/**]
   push:
     branches: [main]
-    paths: [.github/actions/**, .github/workflows/**]
+    paths: [.github/actions/**, .github/workflows/**, scripts/**]
 
 permissions:
   contents: read
@@ -18,3 +18,6 @@ jobs:
       - run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: actionlint -ignore 'SC(2016|2035|2129)'
+      - run: bash scripts/test-aur-pkgbuild.sh
+      - run: |
+          for script in scripts/*.sh; do bash -n "$script"; done

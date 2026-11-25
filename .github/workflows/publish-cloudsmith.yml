@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment: release
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download and verify GitHub Release packages
         env:
           GH_TOKEN: ${{ github.token }}
@@ -59,6 +60,12 @@ jobs:
             cd dist
             grep -F -e "  ${deb_asset}" -e "  ${rpm_asset}" "${checksums}" | sha256sum --check --strict
           )
+
+      - name: Validate native package installation
+        env:
+          VERSION: ${{ inputs.version }}
+          PACKAGE_REVISION: ${{ inputs.package_revision || '1' }}
+        run: bash scripts/validate-native-packages.sh dist "$VERSION" "$PACKAGE_REVISION" native
 
       - name: Install Cloudsmith CLI
         uses: cloudsmith-io/cloudsmith-cli-action@ad73fafb92e3e29a5166c529464c2df7658a608e # v3.1.0
