@@ -81,6 +81,7 @@ jobs:
           git commit -m "build(nix): refresh Harbor release metadata"
           # Other jobs can update README/Flatpak on main concurrently.
           for attempt in 1 2 3; do
+            echo "Publishing Nix metadata (attempt $attempt/3)"
             git pull --rebase origin main
             # Refuse publication if a newer asset appeared during the build.
             python3 nix/update.py --check
